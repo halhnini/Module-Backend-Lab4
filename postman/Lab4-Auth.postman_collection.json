@@ -1,0 +1,324 @@
+{
+  "info": {
+    "name": "Lab4-Auth",
+    "description": "Authentification JWT et rôles USER / ADMIN. Lancer les requêtes dans l'ordre (Run collection) : les tokens et les ids sont enregistrés dans les variables de la collection.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:8080" },
+    { "key": "userName", "value": "lab4user" },
+    { "key": "adminName", "value": "lab4admin" },
+    { "key": "managerName", "value": "lab4manager" },
+    { "key": "managerToken", "value": "" },
+    { "key": "managerProductId", "value": "" },
+    { "key": "password", "value": "secret123" },
+    { "key": "userToken", "value": "" },
+    { "key": "adminToken", "value": "" },
+    { "key": "productId", "value": "" },
+    { "key": "orderId", "value": "" }
+  ],
+  "item": [
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Register USER",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+            "pm.test('201 créé, ou 409 si déjà inscrit', () => pm.expect(pm.response.code).to.be.oneOf([201, 409]));"
+          ] } }],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{baseUrl}}/api/auth/register",
+            "body": { "mode": "raw", "raw": "{\n  \"username\": \"{{userName}}\",\n  \"email\": \"{{userName}}@test.local\",\n  \"password\": \"{{password}}\"\n}" }
+          }
+        },
+        {
+          "name": "Register ADMIN",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+            "pm.test('201 créé, ou 409 si déjà inscrit', () => pm.expect(pm.response.code).to.be.oneOf([201, 409]));"
+          ] } }],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{baseUrl}}/api/auth/register",
+            "body": { "mode": "raw", "raw": "{\n  \"username\": \"{{adminName}}\",\n  \"email\": \"{{adminName}}@test.local\",\n  \"password\": \"{{password}}\",\n  \"role\": \"ADMIN\"\n}" }
+          }
+        },
+        {
+          "name": "Login USER",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+            "pm.test('200 OK', () => pm.response.to.have.status(200));",
+            "const token = pm.response.json().token;",
+            "pm.test('token présent', () => pm.expect(token).to.be.a('string').and.not.empty);",
+            "pm.collectionVariables.set('userToken', token);"
+          ] } }],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{baseUrl}}/api/auth/login",
+            "body": { "mode": "raw", "raw": "{\n  \"username\": \"{{userName}}\",\n  \"password\": \"{{password}}\"\n}" }
+          }
+        },
+        {
+          "name": "Login ADMIN",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+            "pm.test('200 OK', () => pm.response.to.have.status(200));",
+            "const token = pm.response.json().token;",
+            "pm.test('token présent', () => pm.expect(token).to.be.a('string').and.not.empty);",
+            "pm.collectionVariables.set('adminToken', token);"
+          ] } }],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{baseUrl}}/api/auth/login",
+            "body": { "mode": "raw", "raw": "{\n  \"username\": \"{{adminName}}\",\n  \"password\": \"{{password}}\"\n}" }
+          }
+        },
+        {
+          "name": "Register MANAGER",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+            "pm.test('201 créé, ou 409 si déjà inscrit', () => pm.expect(pm.response.code).to.be.oneOf([201, 409]));"
+          ] } }],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{baseUrl}}/api/auth/register",
+            "body": { "mode": "raw", "raw": "{\n  \"username\": \"{{managerName}}\",\n  \"email\": \"{{managerName}}@test.local\",\n  \"password\": \"{{password}}\",\n  \"role\": \"MANAGER\"\n}" }
+          }
+        },
+        {
+          "name": "Login MANAGER",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+            "pm.test('200 OK', () => pm.response.to.have.status(200));",
+            "const token = pm.response.json().token;",
+            "pm.test('token présent', () => pm.expect(token).to.be.a('string').and.not.empty);",
+            "pm.collectionVariables.set('managerToken', token);"
+          ] } }],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{baseUrl}}/api/auth/login",
+            "body": { "mode": "raw", "raw": "{\n  \"username\": \"{{managerName}}\",\n  \"password\": \"{{password}}\"\n}" }
+          }
+        },
+        {
+          "name": "Refresh sans token",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+            "pm.test('401 Unauthorized', () => pm.response.to.have.status(401));"
+          ] } }],
+          "request": { "method": "POST", "url": "{{baseUrl}}/api/auth/refresh" }
+        },
+        {
+          "name": "Refresh trop tôt",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+            "pm.test('400 : le token vient d\\'être émis', () => pm.response.to.have.status(400));"
+          ] } }],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Authorization", "value": "Bearer {{userToken}}" }],
+            "url": "{{baseUrl}}/api/auth/refresh"
+          }
+        },
+        {
+          "name": "Login mauvais mot de passe",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+            "pm.test('401 Unauthorized', () => pm.response.to.have.status(401));"
+          ] } }],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{baseUrl}}/api/auth/login",
+            "body": { "mode": "raw", "raw": "{\n  \"username\": \"{{userName}}\",\n  \"password\": \"faux\"\n}" }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Products",
+      "item": [
+        {
+          "name": "Get All sans token",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+            "pm.test('401 Unauthorized', () => pm.response.to.have.status(401));"
+          ] } }],
+          "request": { "method": "GET", "url": "{{baseUrl}}/api/products" }
+        },
+        {
+          "name": "Get All",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+            "pm.test('200 OK', () => pm.response.to.have.status(200));",
+            "pm.test('page de produits', () => pm.expect(pm.response.json().content).to.be.an('array'));"
+          ] } }],
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{userToken}}" }],
+            "url": "{{baseUrl}}/api/products"
+          }
+        },
+        {
+          "name": "Create (USER refusé)",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+            "pm.test('403 Forbidden', () => pm.response.to.have.status(403));"
+          ] } }],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{userToken}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": "{{baseUrl}}/api/products",
+            "body": { "mode": "raw", "raw": "{\n  \"name\": \"Interdit {{$timestamp}}\",\n  \"price\": 10.00,\n  \"quantity\": 1,\n  \"categoryId\": 1\n}" }
+          }
+        },
+        {
+          "name": "Create (ADMIN)",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+            "pm.test('201 Created', () => pm.response.to.have.status(201));",
+            "pm.collectionVariables.set('productId', pm.response.json().id);"
+          ] } }],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{adminToken}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": "{{baseUrl}}/api/products",
+            "body": { "mode": "raw", "raw": "{\n  \"name\": \"Produit Postman {{$timestamp}}\",\n  \"price\": 25.50,\n  \"quantity\": 10,\n  \"categoryId\": 1\n}" }
+          }
+        },
+        {
+          "name": "Create (MANAGER)",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+            "pm.test('201 Created', () => pm.response.to.have.status(201));",
+            "pm.collectionVariables.set('managerProductId', pm.response.json().id);"
+          ] } }],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{managerToken}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": "{{baseUrl}}/api/products",
+            "body": { "mode": "raw", "raw": "{\n  \"name\": \"Produit Manager {{$timestamp}}\",\n  \"price\": 15.00,\n  \"quantity\": 3,\n  \"categoryId\": 1\n}" }
+          }
+        },
+        {
+          "name": "Delete (MANAGER refusé)",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+            "pm.test('403 Forbidden', () => pm.response.to.have.status(403));"
+          ] } }],
+          "request": {
+            "method": "DELETE",
+            "header": [{ "key": "Authorization", "value": "Bearer {{managerToken}}" }],
+            "url": "{{baseUrl}}/api/products/{{managerProductId}}"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Orders",
+      "item": [
+        {
+          "name": "Create (USER)",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+            "pm.test('201 Created', () => pm.response.to.have.status(201));",
+            "const order = pm.response.json();",
+            "pm.test('commande au nom du USER', () => pm.expect(order.username).to.eql(pm.collectionVariables.get('userName')));",
+            "pm.collectionVariables.set('orderId', order.id);"
+          ] } }],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{userToken}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": "{{baseUrl}}/api/orders",
+            "body": { "mode": "raw", "raw": "{\n  \"items\": [\n    { \"productId\": {{productId}}, \"quantity\": 2 }\n  ]\n}" }
+          }
+        },
+        {
+          "name": "My Orders (USER)",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+            "pm.test('200 OK', () => pm.response.to.have.status(200));",
+            "const me = pm.collectionVariables.get('userName');",
+            "pm.test('uniquement mes commandes', () => pm.response.json().forEach(o => pm.expect(o.username).to.eql(me)));"
+          ] } }],
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{userToken}}" }],
+            "url": "{{baseUrl}}/api/orders"
+          }
+        },
+        {
+          "name": "All Orders (MANAGER)",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+            "pm.test('200 OK', () => pm.response.to.have.status(200));",
+            "const id = Number(pm.collectionVariables.get('orderId'));",
+            "pm.test('voit aussi la commande du USER', () => pm.expect(pm.response.json().map(o => o.id)).to.include(id));"
+          ] } }],
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{managerToken}}" }],
+            "url": "{{baseUrl}}/api/orders"
+          }
+        },
+        {
+          "name": "Delete (MANAGER refusé)",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+            "pm.test('403 Forbidden', () => pm.response.to.have.status(403));"
+          ] } }],
+          "request": {
+            "method": "DELETE",
+            "header": [{ "key": "Authorization", "value": "Bearer {{managerToken}}" }],
+            "url": "{{baseUrl}}/api/orders/{{orderId}}"
+          }
+        },
+        {
+          "name": "Delete (USER refusé)",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+            "pm.test('403 Forbidden', () => pm.response.to.have.status(403));"
+          ] } }],
+          "request": {
+            "method": "DELETE",
+            "header": [{ "key": "Authorization", "value": "Bearer {{userToken}}" }],
+            "url": "{{baseUrl}}/api/orders/{{orderId}}"
+          }
+        },
+        {
+          "name": "Delete (ADMIN)",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+            "pm.test('204 No Content', () => pm.response.to.have.status(204));"
+          ] } }],
+          "request": {
+            "method": "DELETE",
+            "header": [{ "key": "Authorization", "value": "Bearer {{adminToken}}" }],
+            "url": "{{baseUrl}}/api/orders/{{orderId}}"
+          }
+        },
+        {
+          "name": "Nettoyage : supprimer le produit (ADMIN)",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+            "pm.test('204 No Content', () => pm.response.to.have.status(204));"
+          ] } }],
+          "request": {
+            "method": "DELETE",
+            "header": [{ "key": "Authorization", "value": "Bearer {{adminToken}}" }],
+            "url": "{{baseUrl}}/api/products/{{productId}}"
+          }
+        },
+        {
+          "name": "Nettoyage : supprimer le produit du MANAGER (ADMIN)",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+            "pm.test('204 No Content', () => pm.response.to.have.status(204));"
+          ] } }],
+          "request": {
+            "method": "DELETE",
+            "header": [{ "key": "Authorization", "value": "Bearer {{adminToken}}" }],
+            "url": "{{baseUrl}}/api/products/{{managerProductId}}"
+          }
+        }
+      ]
+    }
+  ]
+}

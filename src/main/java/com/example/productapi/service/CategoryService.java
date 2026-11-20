@@ -41,6 +41,18 @@ public class CategoryService {
         return productRepo.findByCategoryId(id).stream().map(ProductService::toDto).toList();
     }
 
+    @Transactional
+    public CategoryDto update(Long id, CategoryDto dto) {
+        Category category = findCategoryOrThrow(id);
+        category.setName(dto.name());
+        return toDto(category);
+    }
+
+    @Transactional
+    public void delete(Long id) {
+        categoryRepo.delete(findCategoryOrThrow(id));
+    }
+
     private Category findCategoryOrThrow(Long id) {
         return categoryRepo.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Catégorie introuvable avec l'id: " + id));
